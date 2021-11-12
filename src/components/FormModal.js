@@ -12,10 +12,11 @@ import {
 } from 'native-base';
 import DatePicker from 'react-native-datepicker';
 import LaunchCamera from './LaunchCamera';
-import {registerEmployee} from '../API/API';
+import {registerEmployee, updateDatabyId} from '../API/API';
 
 // Data Reference
 const positionData = ['Manager', 'Supervisor', 'Staff'];
+const bankOption = ['MANDIRI', 'BCA', 'BRI'];
 const provinceData = ['Jawa Timur', 'DKI Jakarta'];
 const cityData = {
   'Jawa Timur': ['Surabaya', 'Malang', 'Sidoarjo', 'Gresik'],
@@ -31,10 +32,11 @@ const formStyle = {
   color: 'coolGray.800',
   fontSize: 'xs',
   fontWeight: 500,
+  marginTop: 2,
 };
 
 export default function FormModal(props) {
-  const {modalVisible, setModalVisible, record} = props;
+  const {modalVisible, setModalVisible, record, trigger, setTrigger} = props;
   const [bankAccNumber, setBankAccNumber] = useState('');
   const [currentBankAcc, setCurrentBankAcc] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
@@ -50,6 +52,39 @@ export default function FormModal(props) {
   const [streetAddress, setStreetAddress] = useState('');
   const [cities, setCities] = useState(cityData[provinceData[0]]);
   const [fileData, setFileData] = useState();
+
+  useEffect(() => {
+    if (record.userId) {
+      setBankAccNumber(record.bankAccNumber?.toString());
+      setCurrentBankAcc(record.currentBankAcc);
+      setDateOfBirth(record.dateOfBirth);
+      setEmailAddress(record.emailAddress);
+      setFirstName(record.firstName);
+      setKtpImage(record.ktpImage);
+      setKtpNumber(record.ktpNumber?.toString());
+      setLastName(record.lastName);
+      setPhoneNumber(record.phoneNumber?.toString());
+      setPosition(record.position);
+      setCityAddress(record.cityAddress);
+      setProvinceAddress(record.provinceAddress);
+      setStreetAddress(record.streetAddress);
+    } else {
+      setBankAccNumber('');
+      setCurrentBankAcc('');
+      setDateOfBirth('');
+      setEmailAddress('');
+      setFirstName('');
+      setKtpImage('');
+      setKtpNumber('');
+      setLastName('');
+      setPhoneNumber('');
+      setPosition('');
+      setCityAddress('');
+      setProvinceAddress('');
+      setStreetAddress('');
+    }
+    setFileData();
+  }, [modalVisible]);
 
   useEffect(() => {
     if (provinceAddress !== '') {
@@ -138,6 +173,21 @@ export default function FormModal(props) {
       action: setDateOfBirth,
       type: 'datepicker',
     },
+    {
+      id: 12,
+      label: 'Bank Account',
+      defaultValue: currentBankAcc,
+      option: bankOption,
+      action: setCurrentBankAcc,
+      type: 'select',
+    },
+    {
+      id: 13,
+      label: 'Bank Account Number',
+      defaultValue: bankAccNumber,
+      action: setBankAccNumber,
+      type: 'input',
+    },
   ];
 
   const FormSelect = props => {
@@ -159,21 +209,6 @@ export default function FormModal(props) {
   };
 
   function handleOK() {
-    // let payload = {
-    //   firstName: firstName,
-    //   lastName: lastName,
-    //   dateOfBirth: dateOfBirth,
-    //   phoneNumber: phoneNumber,
-    //   emailAddress: emailAddress,
-    //   position: position,
-    //   provinceAddress: provinceAddress,
-    //   cityAddress: cityAddress,
-    //   streetAddress: streetAddress,
-    //   ktpNumber: ktpNumber,
-    //   currentBankAcc: currentBankAcc,
-    //   bankAccNumber: bankAccNumber,
-    //   fileData: fileData,
-    // };
     const datas = new FormData();
     datas.append('firstName', firstName);
     datas.append('lastName', lastName);
@@ -182,16 +217,33 @@ export default function FormModal(props) {
     datas.append('currentBankAcc', currentBankAcc);
     datas.append('bankAccNumber', bankAccNumber);
     datas.append('ktpNumber', ktpNumber);
-    datas.append('ktpImage', fileData);
+    datas.append(
+      'ktpImage',
+      fileData ? fileData : record.ktpImage ? record.ktpImage : null,
+    );
     datas.append('provinceAddress', provinceAddress);
     datas.append('cityAddress', cityAddress);
     datas.append('phoneNumber', phoneNumber);
     datas.append('position', position);
     datas.append('streetAddress', streetAddress);
     // console.log(payload);
-    registerEmployee(datas).then(result => {
-      console.log(result);
-    });
+    if (record.userId) {
+      updateDatabyId(record.userId, datas).then(result => {
+        if (result.status === 200) {
+          console.log(result);
+          setModalVisible(false);
+          setTrigger(!trigger);
+        }
+      });
+    } else {
+      registerEmployee(datas).then(result => {
+        if (result.status === 200) {
+          console.log(result);
+          setModalVisible(false);
+          setTrigger(!trigger);
+        }
+      });
+    }
   }
 
   return (

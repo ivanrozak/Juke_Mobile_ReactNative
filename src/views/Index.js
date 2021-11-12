@@ -45,6 +45,11 @@ function Index(props) {
     fetchAPI();
   }, [firstName, trigger]);
 
+  const handleAdd = () => {
+    setRecord({});
+    setModalVisible(true);
+  };
+
   const handleEdit = item => {
     setRecord(item);
     setModalVisible(true);
@@ -81,13 +86,15 @@ function Index(props) {
           placeholderTextColor="gray.500"
           InputLeftElement={<SearchIcon size="4" ml="3" />}
         />
-        <Button>Add</Button>
+        <Button onPress={() => handleAdd()}>Add</Button>
       </View>
       <ScrollView style={styles.container}>
         <FormModal
           modalVisible={modalVisible}
           setModalVisible={setModalVisible}
           record={record}
+          trigger={trigger}
+          setTrigger={setTrigger}
         />
         <ImageModal
           imageVisible={imageVisible}
